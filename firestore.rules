@@ -1,0 +1,396 @@
+// ===============================================================
+// Assumed data models
+// ===============================================================
+//
+// complaints/{complaintId}: studentId, studentName, subject, description,
+// category, priority, status, createdAt, updatedAt; adminResponse is optional.
+// Students create their own pending complaints. Admins read all and may update
+// status and response; students can read only their own complaints.
+// users/{uid}/archivedRequests/{referenceId}: requestType, requestId,
+// archivedAt; students may store references to their own completed requests.
+//
+// notices/{noticeId}: title, content, priority, createdBy, createdAt,
+// updatedAt. Admins create, update, and delete notices; authenticated students
+// and admins can read them.
+//
+// menuItems/{menuItemId}: day, mealPeriod, name, description, imageUrl,
+// isAvailable, createdBy, createdAt, updatedAt. Admins manage menu items;
+// authenticated students and admins can read them.
+//
+// notifications/{notificationId} and users/{uid}/fcmTokens/{tokenId} are
+// server-managed with Firebase Admin SDK and are not directly accessible to
+// browser clients.
+//
+// Other collection access remains governed by the existing rules below.
+//
+// ===============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function signedIn() {
+      return isAuthenticated();
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function isRecent(time) {
+      return time is timestamp &&
+        time > request.time - duration.value(5, 'm') &&
+        time <= request.time;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isStudent() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function isVerifiedEmailLinkedStudent() {
+      return isStudent() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email is string &&
+        resource.data.email is string &&
+        resource.data.email == request.auth.token.email;
+    }
+
+    function isArchivableRequest(requestType, requestId) {
+      return (requestType == 'complaint' &&
+          exists(/databases/$(database)/documents/complaints/$(requestId)) &&
+          get(/databases/$(database)/documents/complaints/$(requestId)).data.studentId == request.auth.uid &&
+          get(/databases/$(database)/documents/complaints/$(requestId)).data.status == 'resolved') ||
+        (requestType == 'leave' &&
+          exists(/databases/$(database)/documents/leaveRequests/$(requestId)) &&
+          get(/databases/$(database)/documents/leaveRequests/$(requestId)).data.studentId == request.auth.uid &&
+          get(/databases/$(database)/documents/leaveRequests/$(requestId)).data.status in ['approved', 'rejected', 'cancelled']);
+    }
+
+    function isValidComplaint(data) {
+      return hasRequiredFields(data, [
+          'studentId', 'studentName', 'subject', 'description', 'category',
+          'priority', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        hasOnlyAllowedFields(data, [
+          'studentId', 'studentName', 'subject', 'description', 'category',
+          'priority', 'status', 'adminResponse', 'createdAt', 'updatedAt'
+        ]) &&
+        data.studentId is string &&
+        data.studentId.size() > 0 &&
+        data.studentId.size() <= 128 &&
+        data.studentName is string &&
+        data.studentName.size() > 0 &&
+        data.studentName.size() <= 120 &&
+        data.subject is string &&
+        data.subject.size() > 0 &&
+        data.subject.size() <= 150 &&
+        data.description is string &&
+        data.description.size() > 0 &&
+        data.description.size() <= 5000 &&
+        data.category is string &&
+        data.category.size() > 0 &&
+        data.category.size() <= 80 &&
+        data.priority in ['low', 'medium', 'high'] &&
+        data.status in ['pending', 'in-progress', 'resolved', 'withdrawn'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        (!('adminResponse' in data) ||
+          (data.adminResponse is string &&
+            data.adminResponse.size() <= 2000));
+    }
+
+    function isValidNotice(data) {
+      return hasRequiredFields(data, [
+          'title', 'content', 'priority', 'createdBy', 'createdAt',
+          'updatedAt'
+        ]) &&
+        hasOnlyAllowedFields(data, [
+          'title', 'content', 'priority', 'createdBy', 'createdAt',
+          'updatedAt'
+        ]) &&
+        data.title is string &&
+        data.title.size() > 0 &&
+        data.title.size() <= 150 &&
+        data.content is string &&
+        data.content.size() > 0 &&
+        data.content.size() <= 10000 &&
+        data.priority in ['normal', 'important', 'urgent'] &&
+        data.createdBy is string &&
+        data.createdBy.size() > 0 &&
+        data.createdBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMenuItem(data) {
+      return hasRequiredFields(data, [
+          'day', 'mealPeriod', 'name', 'description', 'imageUrl',
+          'isAvailable', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        hasOnlyAllowedFields(data, [
+          'day', 'mealPeriod', 'name', 'description', 'imageUrl',
+          'isAvailable', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        data.day in [
+          'monday', 'tuesday', 'wednesday', 'thursday',
+          'friday', 'saturday', 'sunday'
+        ] &&
+        data.mealPeriod in ['breakfast', 'lunch', 'dinner'] &&
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 150 &&
+        data.description is string &&
+        data.description.size() <= 1000 &&
+        data.imageUrl is string &&
+        data.imageUrl.size() <= 2048 &&
+        (data.imageUrl == '' ||
+          data.imageUrl.matches('^https?://[^\\s]+$')) &&
+        data.isAvailable is bool &&
+        data.createdBy is string &&
+        data.createdBy.size() > 0 &&
+        data.createdBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function validComplaintStatusTransition() {
+      let oldStatus = resource.data.status;
+      let newStatus = request.resource.data.status;
+      return oldStatus == newStatus ||
+        (oldStatus == 'pending' &&
+          newStatus in ['in-progress', 'resolved']) ||
+        (oldStatus == 'in-progress' &&
+          newStatus in ['pending', 'resolved']) ||
+        (oldStatus == 'resolved' && newStatus == 'in-progress');
+    }
+
+    function isLegacyEmpty(value) {
+      return value == null || value == '' || value == 'N/A' || value == 'NA' ||
+        value == 'None' || value == 'none' || value == 'null' || value == 'undefined';
+    }
+
+    function isUnassigned(data) {
+      return isLegacyEmpty(data.get('hostel', '')) && isLegacyEmpty(data.get('room', ''));
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      // A user may create only their own initial student profile.
+      // Admin profiles must be created from a trusted Firebase console/admin flow.
+      allow create: if signedIn() &&
+        request.auth.uid == userId &&
+        uidUnchanged() &&
+        request.resource.data.role == 'student';
+
+      // Users may update their profile details, but only an existing admin may
+      // change any user's role.
+      allow update: if isAdmin() ||
+        (isOwner(userId) && uidNotModified() &&
+          request.resource.data.role == resource.data.role);
+
+      allow delete: if isAdmin();
+
+      match /archivedRequests/{archiveId} {
+        allow read: if isOwner(userId) && isStudent();
+
+        allow create: if isOwner(userId) && isStudent() &&
+          request.resource.data.keys().hasAll([
+            'requestType', 'requestId', 'archivedAt'
+          ]) &&
+          request.resource.data.keys().hasOnly([
+            'requestType', 'requestId', 'archivedAt'
+          ]) &&
+          request.resource.data.requestType in ['complaint', 'leave'] &&
+          request.resource.data.requestId is string &&
+          archiveId == request.resource.data.requestType + '__' + request.resource.data.requestId &&
+          request.resource.data.archivedAt == request.time &&
+          isArchivableRequest(
+            request.resource.data.requestType,
+            request.resource.data.requestId
+          );
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isStudent();
+      }
+    }
+
+    match /students/{studentRecordId} {
+      allow read: if isAdmin() ||
+        (signedIn() && resource.data.uid == request.auth.uid) ||
+        isVerifiedEmailLinkedStudent();
+      allow create: if isAdmin() &&
+        isUnassigned(request.resource.data);
+      allow update: if isAdmin() &&
+        ((request.resource.data.get('hostel', '') == resource.data.get('hostel', '') &&
+          request.resource.data.get('room', '') == resource.data.get('room', '')) ||
+         (isUnassigned(resource.data) &&
+          request.resource.data.get('hostel', '') == '' &&
+          request.resource.data.get('room', '') == ''));
+      allow delete: if isAdmin() && isUnassigned(resource.data);
+    }
+
+    match /hostels/{hostelId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /rooms/{roomId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() &&
+        request.resource.data.occupied == 0 &&
+        (request.resource.data.status == 'available' || request.resource.data.status == 'inactive');
+      allow update: if isAdmin() &&
+        request.resource.data.occupied == resource.data.occupied &&
+        (request.resource.data.status == 'inactive' ||
+          request.resource.data.status ==
+            (request.resource.data.occupied == request.resource.data.capacity ? 'full' : 'available'));
+      allow delete: if isAdmin() && resource.data.occupied == 0;
+    }
+
+    match /complaints/{complaintId} {
+      allow read: if isAdmin() ||
+        (isStudent() && resource.data.studentId == request.auth.uid);
+
+      allow create: if isStudent() &&
+        isValidComplaint(request.resource.data) &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        isRecent(request.resource.data.createdAt) &&
+        request.resource.data.createdAt == request.time &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        resource.data.status != 'withdrawn' &&
+        isValidComplaint(request.resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'adminResponse', 'updatedAt'
+        ]) &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        validComplaintStatusTransition() &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+   
+match /leaveRequests/{leaveRequestId} {
+  allow read: if isAdmin() ||
+    (isStudent() &&
+      resource.data.studentId == request.auth.uid);
+
+  allow create: if isStudent() &&
+    request.resource.data.keys().hasAll([
+      'studentId', 'studentName', 'studentEmail',
+      'leaveType', 'fromDate', 'toDate', 'reason',
+      'status', 'adminRemarks', 'createdAt', 'updatedAt'
+    ]) &&
+    request.resource.data.keys().hasOnly([
+      'studentId', 'studentName', 'studentEmail',
+      'leaveType', 'fromDate', 'toDate', 'reason',
+      'status', 'adminRemarks', 'createdAt', 'updatedAt'
+    ]) &&
+    request.resource.data.studentId == request.auth.uid &&
+    request.resource.data.status == 'pending' &&
+    request.resource.data.createdAt == request.time &&
+    request.resource.data.updatedAt == request.time;
+
+  allow update: if isAdmin() &&
+    resource.data.status != 'cancelled' &&
+    request.resource.data.diff(resource.data)
+      .affectedKeys().hasOnly([
+        'status', 'adminRemarks', 'updatedAt'
+      ]) &&
+    request.resource.data.status in ['approved', 'rejected'] &&
+    request.resource.data.updatedAt == request.time;
+
+  allow delete: if false;
+}
+
+    match /notices/{noticeId} {
+      allow read: if isAdmin() || isStudent();
+
+      allow create: if isAdmin() &&
+        isValidNotice(request.resource.data) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isRecent(request.resource.data.createdAt) &&
+        request.resource.data.createdAt == request.time &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        isValidNotice(request.resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'content', 'priority', 'updatedAt'
+        ]) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    match /menuItems/{menuItemId} {
+      allow read: if isAdmin() || isStudent();
+
+      allow create: if isAdmin() &&
+        isValidMenuItem(request.resource.data) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isRecent(request.resource.data.createdAt) &&
+        request.resource.data.createdAt == request.time &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        isValidMenuItem(request.resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'day', 'mealPeriod', 'name', 'description', 'imageUrl',
+          'isAvailable', 'updatedAt'
+        ]) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        isRecent(request.resource.data.updatedAt) &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // Notifications, device tokens, and all unlisted collections are closed
+    // to browser clients; notification writes and reads go through the API.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

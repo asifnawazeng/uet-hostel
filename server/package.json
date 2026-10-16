@@ -1,0 +1,33 @@
+
+{
+  "name": "uet-hostel-management-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "UET Hostel Management System - Node.js + Express + TypeScript backend",
+  "main": "dist/server.js",
+  "imports": {
+    "#/*": "./dist/*"
+  },
+  "scripts": {
+    "dev": "tsx watch --tsconfig tsconfig.json src/server.ts",
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.5.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3"
+  }
+}

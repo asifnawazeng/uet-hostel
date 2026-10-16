@@ -1,0 +1,6 @@
+{
+  "name": "UET Hostel Management System",
+  "description": "A comprehensive web-based hostel management system for students and hostel administrators.",
+  "prompt": "UET Hostel Management System",
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
