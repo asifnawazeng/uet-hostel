@@ -57,3 +57,6 @@ ui-debug.log
 
 # Generated Vercel static output (created during deployment build)
 /public/
+
+.vercel
+.env*
