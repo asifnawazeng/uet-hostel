@@ -13,9 +13,10 @@
     "types": ["node", "vite/client"],
     
 "paths": {
-  "@/*": ["./server/src/*"]
+  "@/*": ["./server/src/*", "./client/src/*"]
 }
 
   },
-  "include": ["server.ts", "server/src/**/*"]
+  "include": ["server.ts", "server/src/**/*"],
+  "exclude": ["client"]
 }
