@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 
-import { adminDb } from '@/config/firebase';
-import { requireFirebaseAuth } from '@/middleware/firebase-auth.middleware';
+import { adminDb } from '@server/config/firebase';
+import { requireFirebaseAuth } from '@server/middleware/firebase-auth.middleware';
 
 export const studentRoomRouter = Router();
 

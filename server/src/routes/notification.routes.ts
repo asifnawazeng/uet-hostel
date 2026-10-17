@@ -4,14 +4,14 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 
-import { adminDb } from '@/config/firebase';
-import { requireFirebaseAuth } from '@/middleware/firebase-auth.middleware';
+import { adminDb } from '@server/config/firebase';
+import { requireFirebaseAuth } from '@server/middleware/firebase-auth.middleware';
 import {
   createAndSendNotification,
   createAndSendNotifications,
   type NotificationContent,
   type NotificationType,
-} from '@/services/notification.service';
+} from '@server/services/notification.service';
 
 export const notificationRouter = Router();
 

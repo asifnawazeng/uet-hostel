@@ -9,7 +9,7 @@ import {
   type Firestore,
 } from 'firebase-admin/firestore';
 
-import { adminApp, adminDb } from '@/config/firebase';
+import { adminApp, adminDb } from '@server/config/firebase';
 
 interface DefaultMenuItem {
   day:

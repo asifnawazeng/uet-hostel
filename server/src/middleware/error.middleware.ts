@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { isProduction } from '@/config/env';
+import { isProduction } from '@server/config/env';
 
 /** 404 handler for unmatched routes. */
 export function notFoundHandler(

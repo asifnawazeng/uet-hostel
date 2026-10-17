@@ -1,14 +1,14 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 
-import { requireAdmin } from '@/middleware/admin-auth.middleware';
+import { requireAdmin } from '@server/middleware/admin-auth.middleware';
 import {
   assignStudentToRoom,
   moveStudentToRoom,
   removeStudentFromRoom,
   deleteRoomSafely,
   RoomAssignmentError,
-} from '@/services/room-assignment.service';
+} from '@server/services/room-assignment.service';
 
 export const roomAssignmentRouter = Router();
 
@@ -148,4 +148,3 @@ async function handleAssignment(
     });
   }
 }
-

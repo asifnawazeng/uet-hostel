@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 
-import { env } from '@/config/env';
-import { isFirebaseAdminConfigured } from '@/config/firebase';
+import { env } from '@server/config/env';
+import { isFirebaseAdminConfigured } from '@server/config/firebase';
 
 // Health endpoint.
 //

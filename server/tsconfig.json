@@ -19,7 +19,7 @@
     "types": ["node"],
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@server/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"],

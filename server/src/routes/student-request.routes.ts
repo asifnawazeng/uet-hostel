@@ -2,9 +2,9 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 
-import { adminDb } from '@/config/firebase';
-import { requireFirebaseAuth } from '@/middleware/firebase-auth.middleware';
-import { createAndSendNotifications } from '@/services/notification.service';
+import { adminDb } from '@server/config/firebase';
+import { requireFirebaseAuth } from '@server/middleware/firebase-auth.middleware';
+import { createAndSendNotifications } from '@server/services/notification.service';
 
 export const studentRequestRouter = Router();
 

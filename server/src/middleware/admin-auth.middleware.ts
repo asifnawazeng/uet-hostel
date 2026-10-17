@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { authenticateFirebaseUser } from '@/middleware/firebase-auth.middleware';
+import { authenticateFirebaseUser } from '@server/middleware/firebase-auth.middleware';
 
 export async function requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   const identity = await authenticateFirebaseUser(req, res, {

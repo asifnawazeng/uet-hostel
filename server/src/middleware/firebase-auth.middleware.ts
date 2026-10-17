@@ -4,7 +4,7 @@ import {
   adminAuth,
   adminDb,
   isFirebaseAdminConfigured,
-} from '@/config/firebase';
+} from '@server/config/firebase';
 
 interface AuthFailureMessages {
   unavailable: string;

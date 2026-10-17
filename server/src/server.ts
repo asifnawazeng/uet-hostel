@@ -1,5 +1,5 @@
-import { createApp } from '@/app';
-import { env } from '@/config/env';
+import { createApp } from '@server/app';
+import { env } from '@server/config/env';
 
 // Process entry point: build the app and start listening.
 // Kept separate from app.ts so the Express app can be imported without
@@ -22,4 +22,3 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     server.close(() => process.exit(0));
   });
 }
-

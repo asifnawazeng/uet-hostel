@@ -1,6 +1,6 @@
 import { FieldValue, type DocumentReference, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
 
-import { adminDb } from '@/config/firebase';
+import { adminDb } from '@server/config/firebase';
 
 type RoomStatus = 'available' | 'full' | 'inactive';
 

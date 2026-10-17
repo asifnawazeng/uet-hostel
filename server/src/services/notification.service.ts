@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
-import { adminApp, adminDb } from '@/config/firebase';
+import { adminApp, adminDb } from '@server/config/firebase';
 
 export type NotificationType = 'notice' | 'complaint' | 'system';
 

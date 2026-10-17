@@ -3,13 +3,13 @@ import express, { type Express } from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { env, isProduction } from '@/config/env';
-import { errorHandler, notFoundHandler } from '@/middleware/error.middleware';
-import { healthRouter } from '@/routes/health.routes';
-import { notificationRouter } from '@/routes/notification.routes';
-import { roomAssignmentRouter } from '@/routes/room-assignment.routes';
-import { studentRoomRouter } from '@/routes/student-room.routes';
-import { studentRequestRouter } from '@/routes/student-request.routes';
+import { env, isProduction } from '@server/config/env';
+import { errorHandler, notFoundHandler } from '@server/middleware/error.middleware';
+import { healthRouter } from '@server/routes/health.routes';
+import { notificationRouter } from '@server/routes/notification.routes';
+import { roomAssignmentRouter } from '@server/routes/room-assignment.routes';
+import { studentRoomRouter } from '@server/routes/student-room.routes';
+import { studentRequestRouter } from '@server/routes/student-request.routes';
 
 // Express application assembly.
 //
