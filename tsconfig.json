@@ -1,4 +1,4 @@
-﻿{
+{
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -11,9 +11,11 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "types": ["node", "vite/client"],
-    "paths": {
-      "@/*": ["./server/src/*", "./client/src/*"]
-    }
+    
+"paths": {
+  "@/*": ["./server/src/*"]
+}
+
   },
   "include": ["server.ts", "server/src/**/*"]
 }
