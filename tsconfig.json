@@ -12,7 +12,7 @@
     "jsx": "react-jsx",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./server/src/*"]
+      "@/*": ["./server/src/*", "./client/src/*"]
     }
   },
   "include": ["server.ts", "server/src/**/*"]
