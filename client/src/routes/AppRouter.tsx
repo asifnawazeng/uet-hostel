@@ -25,8 +25,10 @@ import { StudentRoomChangePage } from '@/features/students/pages/StudentRoomChan
 import { StudentComplaintsPage } from '@/features/complaints/pages/StudentComplaintsPage';
 import { AdminComplaintsPage } from '@/features/complaints/pages/AdminComplaintsPage';
 
-import { AdminNoticesPage } from '@/features/notices/pages/AdminNoticesPage.tsx';
-import { StudentNoticesPage } from '@/features/notices/pages/StudentNoticesPage.tsx';
+
+import { AdminNoticesPage } from '@/features/notices/pages/AdminNoticesPage';
+import { StudentNoticesPage } from '@/features/notices/pages/StudentNoticesPage';
+
 
 import { AdminNotificationsPage } from '@/features/notifications/pages/AdminNotificationsPage';
 import { StudentNotificationsPage } from '@/features/notifications/pages/StudentNotificationsPage';
