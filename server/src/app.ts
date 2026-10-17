@@ -34,11 +34,22 @@ export function createApp(): Express {
   app.use('/api', studentRoomRouter);
   app.use('/api', studentRequestRouter);
 
-  if (isProduction) {
-    const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-    const clientDist = path.resolve(currentDirectory, '../../client/dist');
+  // Vercel serves files in the root public/ directory through its CDN and
+  // runs this Express app as a serverless function. The prepare-vercel script
+  // copies the Vite build into public/ before deployment. Keep express.static
+  // enabled for the normal Node production server, but do not rely on it on
+  // Vercel (where express.static is not used to serve public assets).
+  const runningOnVercel = process.env.VERCEL === '1';
 
-    app.use(express.static(clientDist));
+  if (isProduction || runningOnVercel) {
+    const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+    const clientDist = runningOnVercel
+      ? path.resolve(process.cwd(), 'public')
+      : path.resolve(currentDirectory, '../../client/dist');
+
+    if (!runningOnVercel) {
+      app.use(express.static(clientDist));
+    }
 
     // The frontend is a single-page application. Return index.html for
     // browser routes while leaving unknown API routes for the API 404 handler.

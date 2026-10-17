@@ -54,3 +54,6 @@ ui-debug.log
 .cache/
 .temp/
 .tmp/
+
+# Generated Vercel static output (created during deployment build)
+/public/
