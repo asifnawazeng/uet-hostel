@@ -8,7 +8,7 @@
     "server"
   ],
   "scripts": {
-    "dev": "tsx watch server.ts",
+    "dev": "tsx watch dev-server.ts",
     "seed:mess": "tsx --tsconfig server/tsconfig.json server/src/scripts/seed-mess-menu.ts",
     "build": "npm run build --workspace=client && npm run build --workspace=server",
     "lint": "npm run lint --workspace=client",
